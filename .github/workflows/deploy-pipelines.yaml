@@ -1,0 +1,85 @@
+name: Deploy Kubeflow Pipelines
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'pipelines/**/*.py'
+  workflow_dispatch:
+    inputs:
+      pipeline_path:
+        description: 'Path to specific pipeline (e.g., pipelines/examples/hello_world.py)'
+        required: false
+        default: ''
+
+env:
+  KUBEFLOW_ENDPOINT: https://kubeflow.walleye-frog.ts.net/pipeline
+
+jobs:
+  compile-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install kfp
+        run: pip install kfp
+
+      - name: Get changed pipeline files
+        id: changed
+        run: |
+          if [ -n "${{ github.event.inputs.pipeline_path }}" ]; then
+            echo "files=${{ github.event.inputs.pipeline_path }}" >> $GITHUB_OUTPUT
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'pipelines/**/*.py' | tr '\n' ' ')
+            echo "files=$CHANGED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compile and upload pipelines
+        if: steps.changed.outputs.files != ''
+        env:
+          KFP_ENDPOINT: ${{ env.KUBEFLOW_ENDPOINT }}
+        run: |
+          for file in ${{ steps.changed.outputs.files }}; do
+            if [ -f "$file" ]; then
+              echo "Processing $file..."
+              
+              # Extract pipeline name from filename
+              PIPELINE_NAME=$(basename "$file" .py | tr '_' '-')
+              YAML_FILE="${PIPELINE_NAME}.yaml"
+              
+              # Compile pipeline
+              echo "Compiling $file to $YAML_FILE..."
+              kfp dsl compile --py "$file" --output "$YAML_FILE"
+              
+              # Upload to Kubeflow (requires auth configured)
+              # Note: This requires Kubeflow to be accessible from GHA runners
+              # For private clusters, use self-hosted runners or Tailscale
+              echo "Compiled: $YAML_FILE"
+              echo "Upload manually or configure runner access to Kubeflow"
+            fi
+          done
+
+      - name: Upload compiled pipelines as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-pipelines
+          path: '*.yaml'
+          retention-days: 7
+
+      - name: Summary
+        run: |
+          echo "## Compiled Pipelines" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          for f in *.yaml; do
+            [ -f "$f" ] && echo "- $f" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download artifacts and upload to Kubeflow, or configure self-hosted runner with Tailscale access." >> $GITHUB_STEP_SUMMARY
