@@ -10,7 +10,7 @@ from kfp import compiler
 
 @dsl.component(
     base_image="python:3.11-slim",
-    packages_to_install=["boto3", "requests"]
+    packages_to_install=["boto3", "botocore", "requests"]
 )
 def create_ddi_dataset(
     minio_endpoint: str,
@@ -58,13 +58,24 @@ def create_ddi_dataset(
         {"text": "Vitamin D with calcium supplements", "label": 0},
     ]
     
-    # Upload to MinIO
+    # Upload to MinIO with proper config for Tailscale endpoints
+    from botocore.config import Config
+    
+    s3_config = Config(
+        connect_timeout=30,
+        read_timeout=60,
+        retries={'max_attempts': 3},
+        s3={'addressing_style': 'path'}
+    )
+    
     s3 = boto3.client(
         's3',
         endpoint_url=minio_endpoint,
         aws_access_key_id=minio_access_key,
         aws_secret_access_key=minio_secret_key,
-        region_name='us-east-1'
+        region_name='us-east-1',
+        config=s3_config,
+        verify=True
     )
     
     data_json = json.dumps(training_data, indent=2)

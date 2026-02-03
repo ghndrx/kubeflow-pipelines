@@ -71,10 +71,10 @@ deploymentSpec:
         - -c
         - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
           \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
-          \ python3 -m pip install --quiet --no-warn-script-location 'boto3' 'botocore'\
-          \ 'requests'  &&  python3 -m pip install --quiet --no-warn-script-location\
-          \ 'kfp==2.15.2' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"\
-          3.9\"' && \"$0\" \"$@\"\n"
+          \ python3 -m pip install --quiet --no-warn-script-location 'boto3' 'requests'\
+          \  &&  python3 -m pip install --quiet --no-warn-script-location 'kfp==2.15.2'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
         - sh
         - -ec
         - 'program_path=$(mktemp -d)
@@ -116,13 +116,9 @@ deploymentSpec:
           , \"label\": 0},\n        {\"text\": \"Amlodipine with metoprolol combination\"\
           , \"label\": 0},\n        {\"text\": \"Omeprazole and acetaminophen together\"\
           , \"label\": 0},\n        {\"text\": \"Vitamin D with calcium supplements\"\
-          , \"label\": 0},\n    ]\n\n    # Upload to MinIO with proper config for\
-          \ Tailscale endpoints\n    from botocore.config import Config\n\n    s3_config\
-          \ = Config(\n        connect_timeout=30,\n        read_timeout=60,\n   \
-          \     retries={'max_attempts': 3},\n        s3={'addressing_style': 'path'}\n\
-          \    )\n\n    s3 = boto3.client(\n        's3',\n        endpoint_url=minio_endpoint,\n\
-          \        aws_access_key_id=minio_access_key,\n        aws_secret_access_key=minio_secret_key,\n\
-          \        region_name='us-east-1',\n        config=s3_config,\n        verify=True\n\
+          , \"label\": 0},\n    ]\n\n    # Upload to MinIO\n    s3 = boto3.client(\n\
+          \        's3',\n        endpoint_url=minio_endpoint,\n        aws_access_key_id=minio_access_key,\n\
+          \        aws_secret_access_key=minio_secret_key,\n        region_name='us-east-1'\n\
           \    )\n\n    data_json = json.dumps(training_data, indent=2)\n    s3.put_object(\n\
           \        Bucket='datasets',\n        Key=output_path,\n        Body=data_json.encode('utf-8'),\n\
           \        ContentType='application/json'\n    )\n\n    print(f\"\u2705 Uploaded\

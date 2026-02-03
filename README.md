@@ -18,7 +18,7 @@ This repository contains ML pipeline definitions managed via ArgoCD.
 
 1. **Add a pipeline**: Create a Python file in `pipelines/`
 2. **Push to main**: ArgoCD auto-deploys
-3. **Monitor**: Check Kubeflow UI at https://kubeflow.walleye-frog.ts.net
+3. **Monitor**: Check Kubeflow UI at <KUBEFLOW_URL>
 
 ## Quick Start
 
@@ -36,6 +36,6 @@ def hello_pipeline():
 
 ## Environment
 
-- **Kubeflow**: https://kubeflow.walleye-frog.ts.net
-- **MinIO**: https://minio.walleye-frog.ts.net
-- **ArgoCD**: https://argocd.walleye-frog.ts.net
+- **Kubeflow**: <KUBEFLOW_URL>
+- **MinIO**: <MINIO_URL>
+- **ArgoCD**: <ARGOCD_URL>
