@@ -74,6 +74,45 @@ tar -xzf model.tar.gz
 
 ## Configuration
 
+All configuration is via environment variables. Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `RUNPOD_API_KEY` | Yes | - | RunPod API key |
+| `RUNPOD_ENDPOINT` | Yes | - | RunPod serverless endpoint ID |
+| `AWS_ACCESS_KEY_ID` | Yes | - | AWS credentials for S3 |
+| `AWS_SECRET_ACCESS_KEY` | Yes | - | AWS credentials for S3 |
+| `AWS_SESSION_TOKEN` | No | - | For assumed role sessions |
+| `AWS_REGION` | No | us-east-1 | AWS region |
+| `S3_BUCKET` | Yes | - | Bucket for model artifacts |
+| `BASE_MODEL` | No | Bio_ClinicalBERT | HuggingFace model ID |
+| `MAX_SAMPLES` | No | 10000 | Training samples |
+| `EPOCHS` | No | 3 | Training epochs |
+| `BATCH_SIZE` | No | 16 | Batch size |
+
+### Kubernetes Secrets (Recommended)
+
+For production, use Kubernetes secrets instead of environment variables:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ml-pipeline-secrets
+type: Opaque
+stringData:
+  RUNPOD_API_KEY: "your-key"
+  AWS_ACCESS_KEY_ID: "your-key"
+  AWS_SECRET_ACCESS_KEY: "your-secret"
+```
+
 ### Supported Models
 
 | Model | Type | Use Case |
