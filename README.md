@@ -1,6 +1,6 @@
 # Healthcare ML Training Pipeline
 
-Serverless GPU training infrastructure for healthcare NLP models using RunPod and AWS.
+Serverless GPU training infrastructure for healthcare NLP models. Training runs on RunPod serverless GPUs, with trained models stored in S3.
 
 ## Overview
 
