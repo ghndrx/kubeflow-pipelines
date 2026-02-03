@@ -103,7 +103,7 @@ def train_ddi_model(job_input: Dict[str, Any]) -> Dict[str, Any]:
             warmup_steps=50,
             weight_decay=0.01,
             logging_steps=10,
-            save_strategy='epoch',
+            save_strategy='no',  # Don't save checkpoints (avoids tensor contiguity issues)
             fp16=torch.cuda.is_available(),
             report_to='none',
         )
