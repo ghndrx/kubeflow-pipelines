@@ -5,8 +5,11 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt /app/requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install dependencies
+# Force upgrade torch to ensure compatibility with transformers
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir torch==2.4.0 --force-reinstall && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy handler and data
 COPY handler.py /app/handler.py
