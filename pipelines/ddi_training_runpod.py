@@ -198,8 +198,8 @@ def ddi_training_pipeline(
     learning_rate: float = 2e-5,
     model_version: str = "v1",
     
-    # MinIO settings - use internal cluster service URL
-    minio_endpoint: str = "http://minio.minio.svc.cluster.local:9000",
+    # MinIO settings - use Tailscale endpoint
+    minio_endpoint: str = "https://minio.walleye-frog.ts.net",
 ):
     """
     Full DDI training pipeline:
