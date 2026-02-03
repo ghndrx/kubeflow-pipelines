@@ -178,6 +178,7 @@ def ddi_data_prep_pipeline(
     model_name: str = "emilyalsentzer/Bio_ClinicalBERT",
     epochs: int = 3,
     learning_rate: float = 2e-5,
+    # NOTE: Using internal endpoint. For Tailscale, add ACL: tag:k8s → tagged-devices:*
     minio_endpoint: str = "http://minio.minio.svc.cluster.local:9000",
 ):
     """

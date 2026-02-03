@@ -198,8 +198,8 @@ def ddi_training_pipeline(
     learning_rate: float = 2e-5,
     model_version: str = "v1",
     
-    # MinIO settings - use Tailscale endpoint
-    minio_endpoint: str = "https://minio.walleye-frog.ts.net",
+    # MinIO settings - internal for now. For Tailscale, add ACL: tag:k8s → tagged-devices:*
+    minio_endpoint: str = "http://minio.minio.svc.cluster.local:9000",
 ):
     """
     Full DDI training pipeline:
