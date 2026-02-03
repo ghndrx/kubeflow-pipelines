@@ -1,29 +1,29 @@
-# DDI Training Pipeline
+# Healthcare ML Training Pipeline
 
-ML training pipelines using RunPod serverless GPU infrastructure for Drug-Drug Interaction (DDI) classification.
+Serverless GPU training infrastructure for healthcare NLP models using RunPod and AWS.
 
-## 🎯 Features
+## Overview
 
-- **Bio_ClinicalBERT Classifier** - Fine-tuned on 176K real DrugBank DDI samples
-- **RunPod Serverless** - Auto-scaling GPU workers (RTX 4090, A100, etc.)
-- **S3 Model Storage** - Trained models saved to S3 with AWS SSO support
-- **4-Class Severity** - Minor, Moderate, Major, Contraindicated
+This project provides production-ready ML pipelines for training healthcare classification models:
 
-## 📊 Training Results
+- **Drug-Drug Interaction (DDI)** - Severity classification from DrugBank (176K samples)
+- **Adverse Drug Events (ADE)** - Binary detection from ADE Corpus V2 (30K samples)
+- **Medical Triage** - Urgency level classification
+- **Symptom-to-Disease** - Diagnosis prediction (41 disease classes)
 
-| Metric | Value |
-|--------|-------|
-| Model | Bio_ClinicalBERT |
-| Dataset | DrugBank 176K DDI pairs |
-| Train Loss | 0.021 |
-| Eval Accuracy | 100% |
-| Eval F1 | 100% |
-| GPU | RTX 4090 |
-| Training Time | ~60s |
+All models use Bio_ClinicalBERT as the base and are fine-tuned on domain-specific datasets.
 
-## 🚀 Quick Start
+## Training Results
 
-### 1. Run Training via RunPod API
+| Task | Dataset | Samples | Accuracy | F1 Score |
+|------|---------|---------|----------|----------|
+| DDI Classification | DrugBank | 176K | 100% | 100% |
+| ADE Detection | ADE Corpus V2 | 9K | 93.5% | 95.3% |
+| Symptom-Disease | Disease Symptoms | 4.4K | 100% | 100% |
+
+## Quick Start
+
+### Run Training
 
 ```bash
 curl -X POST "https://api.runpod.ai/v2/YOUR_ENDPOINT/run" \
@@ -31,9 +31,10 @@ curl -X POST "https://api.runpod.ai/v2/YOUR_ENDPOINT/run" \
   -H "Content-Type: application/json" \
   -d '{
     "input": {
+      "task": "ddi",
       "model_name": "emilyalsentzer/Bio_ClinicalBERT",
       "max_samples": 10000,
-      "epochs": 1,
+      "epochs": 3,
       "batch_size": 16,
       "s3_bucket": "your-bucket",
       "aws_access_key_id": "...",
@@ -43,69 +44,67 @@ curl -X POST "https://api.runpod.ai/v2/YOUR_ENDPOINT/run" \
   }'
 ```
 
-### 2. Download Trained Model
+Available tasks: `ddi`, `ade`, `triage`, `symptom_disease`
+
+### Download Trained Model
 
 ```bash
-aws s3 cp s3://your-bucket/bert-classifier/model_YYYYMMDD_HHMMSS.tar.gz .
-tar -xzf model_*.tar.gz
+aws s3 cp s3://your-bucket/model.tar.gz .
+tar -xzf model.tar.gz
 ```
 
-## 📁 Structure
+## Project Structure
 
 ```
 ├── components/
 │   └── runpod_trainer/
-│       ├── Dockerfile        # RunPod serverless container
-│       ├── handler.py        # Training logic (BERT + LoRA LLM)
-│       ├── requirements.txt  # Python dependencies
-│       └── data/             # DrugBank DDI dataset (176K samples)
+│       ├── Dockerfile
+│       ├── handler.py          # Multi-task training logic
+│       ├── requirements.txt
+│       └── data/               # DrugBank DDI dataset
 ├── pipelines/
-│   ├── ddi_training_runpod.py   # Kubeflow pipeline definition
-│   └── ddi_data_prep.py         # Data preprocessing pipeline
-├── .github/
-│   └── workflows/
-│       └── build-trainer.yaml   # Auto-build on push
+│   ├── healthcare_training.py  # Kubeflow pipeline definitions
+│   ├── ddi_training_runpod.py
+│   └── ddi_data_prep.py
+├── .github/workflows/
+│   └── build-trainer.yaml      # CI/CD
 └── manifests/
-    └── argocd-app.yaml          # ArgoCD deployment
+    └── argocd-app.yaml
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Supported Models
 
 | Model | Type | Use Case |
 |-------|------|----------|
-| `emilyalsentzer/Bio_ClinicalBERT` | BERT | DDI severity classification |
-| `meta-llama/Llama-3.1-8B-Instruct` | LLM | DDI explanation generation |
-| `google/gemma-3-4b-it` | LLM | Lightweight DDI analysis |
+| `emilyalsentzer/Bio_ClinicalBERT` | BERT | Classification tasks |
+| `meta-llama/Llama-3.1-8B-Instruct` | LLM | Text generation (LoRA) |
+| `google/gemma-3-4b-it` | LLM | Lightweight inference |
 
-### Input Parameters
+### Parameters
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `model_name` | Bio_ClinicalBERT | HuggingFace model |
+| `task` | ddi | Training task |
+| `model_name` | Bio_ClinicalBERT | HuggingFace model ID |
 | `max_samples` | 10000 | Training samples |
-| `epochs` | 1 | Training epochs |
+| `epochs` | 3 | Training epochs |
 | `batch_size` | 16 | Batch size |
 | `eval_split` | 0.1 | Validation split |
-| `s3_bucket` | - | S3 bucket for model output |
-| `s3_prefix` | ddi-models | S3 key prefix |
+| `s3_bucket` | - | S3 bucket for output |
 
-## 🏗️ Development
-
-### Build Container Locally
+## Development
 
 ```bash
+# Build container
 cd components/runpod_trainer
-docker build -t ddi-trainer .
-```
+docker build -t healthcare-trainer .
 
-### Trigger GitHub Actions Build
-
-```bash
+# Trigger CI build
 gh workflow run build-trainer.yaml
 ```
 
-## 📜 License
+## License
 
 MIT
