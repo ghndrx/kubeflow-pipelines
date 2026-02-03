@@ -1,14 +1,12 @@
-FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
+FROM runpod/pytorch:1.0.3-cu1290-torch260-ubuntu2204
 
 WORKDIR /app
 
 # Copy requirements first for better caching
 COPY requirements.txt /app/requirements.txt
 
-# Upgrade pip and install dependencies
-# Force upgrade torch to ensure compatibility with transformers
+# Install dependencies (torch 2.8 in base image satisfies CVE-2025-32434)
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir torch==2.4.0 --force-reinstall && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy handler and data
