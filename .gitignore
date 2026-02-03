@@ -1,25 +1,12 @@
-# Credentials - NEVER commit these
-*.env
-.env*
-secrets/
-*secret*
-*credential*
-*.pem
-*.key
-
-# Compiled pipelines (regenerate from source)
-*.yaml.compiled
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-.Python
 *.so
-.eggs/
-*.egg-info/
-dist/
-build/
+.Python
+env/
+venv/
+.venv/
 
 # IDE
 .idea/
@@ -27,10 +14,18 @@ build/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Build
+*.egg-info/
+dist/
+build/
 
-# Kubeflow artifacts (local only)
-mlpipeline-ui-metadata.json
-mlpipeline-metrics.json
+# Compiled pipelines
+*.yaml
+!manifests/*.yaml
+
+# Local config
+.env
+*.local
+
+# RunPod
+runpod.toml

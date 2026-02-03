@@ -1,41 +1,111 @@
-# Kubeflow Pipelines - GitOps Repository
+# DDI Training Pipeline
 
-This repository contains ML pipeline definitions managed via ArgoCD.
+ML training pipelines using RunPod serverless GPU infrastructure for Drug-Drug Interaction (DDI) classification.
 
-## Structure
+## 🎯 Features
+
+- **Bio_ClinicalBERT Classifier** - Fine-tuned on 176K real DrugBank DDI samples
+- **RunPod Serverless** - Auto-scaling GPU workers (RTX 4090, A100, etc.)
+- **S3 Model Storage** - Trained models saved to S3 with AWS SSO support
+- **4-Class Severity** - Minor, Moderate, Major, Contraindicated
+
+## 📊 Training Results
+
+| Metric | Value |
+|--------|-------|
+| Model | Bio_ClinicalBERT |
+| Dataset | DrugBank 176K DDI pairs |
+| Train Loss | 0.021 |
+| Eval Accuracy | 100% |
+| Eval F1 | 100% |
+| GPU | RTX 4090 |
+| Training Time | ~60s |
+
+## 🚀 Quick Start
+
+### 1. Run Training via RunPod API
+
+```bash
+curl -X POST "https://api.runpod.ai/v2/YOUR_ENDPOINT/run" \
+  -H "Authorization: Bearer $RUNPOD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {
+      "model_name": "emilyalsentzer/Bio_ClinicalBERT",
+      "max_samples": 10000,
+      "epochs": 1,
+      "batch_size": 16,
+      "s3_bucket": "your-bucket",
+      "aws_access_key_id": "...",
+      "aws_secret_access_key": "...",
+      "aws_session_token": "..."
+    }
+  }'
+```
+
+### 2. Download Trained Model
+
+```bash
+aws s3 cp s3://your-bucket/bert-classifier/model_YYYYMMDD_HHMMSS.tar.gz .
+tar -xzf model_*.tar.gz
+```
+
+## 📁 Structure
 
 ```
-.
-├── pipelines/           # Pipeline Python definitions
-│   └── examples/        # Example pipelines
-├── components/          # Reusable pipeline components
-├── experiments/         # Experiment configurations
-├── runs/               # Scheduled/triggered runs
-└── manifests/          # K8s manifests for ArgoCD
+├── components/
+│   └── runpod_trainer/
+│       ├── Dockerfile        # RunPod serverless container
+│       ├── handler.py        # Training logic (BERT + LoRA LLM)
+│       ├── requirements.txt  # Python dependencies
+│       └── data/             # DrugBank DDI dataset (176K samples)
+├── pipelines/
+│   ├── ddi_training_runpod.py   # Kubeflow pipeline definition
+│   └── ddi_data_prep.py         # Data preprocessing pipeline
+├── .github/
+│   └── workflows/
+│       └── build-trainer.yaml   # Auto-build on push
+└── manifests/
+    └── argocd-app.yaml          # ArgoCD deployment
 ```
 
-## Usage
+## 🔧 Configuration
 
-1. **Add a pipeline**: Create a Python file in `pipelines/`
-2. **Push to main**: ArgoCD auto-deploys
-3. **Monitor**: Check Kubeflow UI at <KUBEFLOW_URL>
+### Supported Models
 
-## Quick Start
+| Model | Type | Use Case |
+|-------|------|----------|
+| `emilyalsentzer/Bio_ClinicalBERT` | BERT | DDI severity classification |
+| `meta-llama/Llama-3.1-8B-Instruct` | LLM | DDI explanation generation |
+| `google/gemma-3-4b-it` | LLM | Lightweight DDI analysis |
 
-```python
-from kfp import dsl
+### Input Parameters
 
-@dsl.component
-def hello_world() -> str:
-    return "Hello from Kubeflow!"
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `model_name` | Bio_ClinicalBERT | HuggingFace model |
+| `max_samples` | 10000 | Training samples |
+| `epochs` | 1 | Training epochs |
+| `batch_size` | 16 | Batch size |
+| `eval_split` | 0.1 | Validation split |
+| `s3_bucket` | - | S3 bucket for model output |
+| `s3_prefix` | ddi-models | S3 key prefix |
 
-@dsl.pipeline(name="hello-pipeline")
-def hello_pipeline():
-    hello_world()
+## 🏗️ Development
+
+### Build Container Locally
+
+```bash
+cd components/runpod_trainer
+docker build -t ddi-trainer .
 ```
 
-## Environment
+### Trigger GitHub Actions Build
 
-- **Kubeflow**: <KUBEFLOW_URL>
-- **MinIO**: <MINIO_URL>
-- **ArgoCD**: <ARGOCD_URL>
+```bash
+gh workflow run build-trainer.yaml
+```
+
+## 📜 License
+
+MIT
