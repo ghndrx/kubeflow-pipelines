@@ -198,8 +198,8 @@ def ddi_training_pipeline(
     learning_rate: float = 2e-5,
     model_version: str = "v1",
     
-    # MinIO settings (these will be injected from secrets)
-    minio_endpoint: str = "https://minio.walleye-frog.ts.net",
+    # MinIO settings - use internal cluster service URL
+    minio_endpoint: str = "http://minio.minio.svc.cluster.local:9000",
 ):
     """
     Full DDI training pipeline:
